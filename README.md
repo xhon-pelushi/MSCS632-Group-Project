@@ -48,8 +48,8 @@ MSCS632-Group-Project/
 
 | Member | Role |
 |---|---|
-| Xhon Pelushi | Java implementation, Design Report |
-| Sikun Peng | JavaScript implementation, Comparison Report |
+| Xhon Pelushi | JavaScript implementation (GUI), Presentation |
+| Sikun Peng | Java implementation (GUI), Comparison Report |
 
 ## Deliverables
 
