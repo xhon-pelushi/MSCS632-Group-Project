@@ -40,9 +40,9 @@ MSCS632-Group-Project/
 ## How to Build & Run
 
 ### Java
-See [java/README.md](/Users/sikunpeng/sikun/MSCS632-Group-Project/java/README.md).
+See [java/README.md](java/README.md) for full details.
 
-From the `java/` directory:
+Requires Java 21 and Maven. From the `java/` directory:
 
 ```bash
 mvn clean package
@@ -50,14 +50,18 @@ mvn exec:java
 ```
 
 ### JavaScript
-> Instructions will be added during Day 2 implementation.
+Requires Node.js (no dependencies). From the `javascript/` directory:
+
+```bash
+node index.js
+```
 
 ## Team Roles
 
 | Member | Role |
 |---|---|
-| Xhon Pelushi | JavaScript implementation (GUI), Presentation |
-| Sikun Peng | Java implementation (GUI), Comparison Report |
+| Xhon Pelushi | JavaScript implementation, Presentation |
+| Sikun Peng | Java implementation, Comparison Report |
 
 ## Deliverables
 
