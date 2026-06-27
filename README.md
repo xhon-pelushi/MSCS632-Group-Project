@@ -18,21 +18,22 @@ MSCS632-Group-Project/
 
 ## Application Features
 
-- Multi-user support with user-specific task views
+- Multi-user support with user-specific task views via interactive terminal menu
 - Add, remove, and mark tasks as complete
-- Task categorization (e.g., Work, Personal, School)
+- Task categorization (Work, Personal, Shopping, Other)
 - Task assignment to specific users
 - Concurrent access support
-  - Java: multi-threading
-  - JavaScript: async/await and Promises
+  - Java: multi-threading with synchronized blocks
+  - JavaScript: async/await and Promises via Node.js
 
 ## Languages & Key Concepts Demonstrated
 
 | Feature | Java | JavaScript |
 |---|---|---|
 | Paradigm | Object-Oriented | Prototype-based / Functional |
+| UI | Terminal (Scanner) | Terminal (Node.js readline) |
 | Concurrency | Threads (`synchronized`) | async/await, Promises |
-| Data Storage | Objects / Collections | JSON |
+| Data Storage | Objects / Collections | JSON-compatible objects |
 | Type System | Static, strongly typed | Dynamic, weakly typed |
 | Error Handling | Checked Exceptions | try/catch, Promise `.catch()` |
 
