@@ -5,13 +5,37 @@ const taskManager = require('./taskManager');
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
+// In piped (non-TTY) mode readline fires all 'line' events synchronously before
+// the next ask() can register a listener. Buffer incoming lines and drain them
+// into waiting resolvers so no input is lost regardless of mode.
+const _lineQueue = [];
+const _waiting   = [];
+
+rl.on('line', line => {
+  if (_waiting.length > 0) {
+    _waiting.shift()(line);
+  } else {
+    _lineQueue.push(line);
+  }
+});
+
 function ask(question) {
-  return new Promise(resolve => rl.question(question, resolve));
+  process.stdout.write(question);
+  return new Promise(resolve => {
+    if (_lineQueue.length > 0) {
+      resolve(_lineQueue.shift());
+    } else {
+      _waiting.push(resolve);
+    }
+  });
 }
+
+const IS_TTY = process.stdout.isTTY;
 
 function hr() { console.log('─'.repeat(52)); }
 
 function header(title) {
+  if (IS_TTY) console.clear();
   hr();
   console.log(`  ${title}`);
   hr();
@@ -36,7 +60,6 @@ async function pause() {
 
 async function userSelectionScreen() {
   while (true) {
-    console.clear();
     header('Collaborative To-Do List');
     console.log('\n  Select a user:\n');
 
@@ -67,7 +90,7 @@ async function userSelectionScreen() {
 }
 
 async function viewTasksScreen(tasks) {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Tasks');
   if (tasks.length === 0) {
     console.log('\n  No tasks found.');
@@ -79,7 +102,7 @@ async function viewTasksScreen(tasks) {
 }
 
 async function addTaskScreen() {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Add New Task');
 
   const title = (await ask('\n  Title: ')).trim();
@@ -112,7 +135,7 @@ async function addTaskScreen() {
 }
 
 async function editTaskScreen() {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Edit Task');
 
   const tasks = taskManager.getAllTasks();
@@ -162,7 +185,7 @@ async function editTaskScreen() {
 }
 
 async function deleteTaskScreen() {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Delete Task');
 
   const tasks = taskManager.getAllTasks();
@@ -194,7 +217,7 @@ async function deleteTaskScreen() {
 }
 
 async function markCompleteScreen() {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Mark Task Complete');
 
   const tasks = taskManager.getAllTasks().filter(t => t.status !== STATUS.COMPLETED);
@@ -219,7 +242,7 @@ async function markCompleteScreen() {
 }
 
 async function filterScreen() {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Filter Tasks');
   console.log('\n  Filter by:\n');
   console.log('    1. Category');
@@ -244,7 +267,7 @@ async function filterScreen() {
 }
 
 async function concurrencyDemoScreen() {
-  console.clear();
+  if (IS_TTY) console.clear();
   header('Concurrency Demo');
   console.log('\n  Simulating concurrent task updates with async/await + mutex...\n');
 
@@ -268,7 +291,7 @@ function shutdown() {
 async function mainMenu() {
   while (true) {
     const active = userManager.getActiveUser();
-    console.clear();
+  if (IS_TTY) console.clear();
     header(`Logged in as: ${active.name}`);
     console.log('\n  1. View all tasks');
     console.log('  2. View my tasks');
