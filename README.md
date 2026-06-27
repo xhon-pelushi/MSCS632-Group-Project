@@ -40,7 +40,14 @@ MSCS632-Group-Project/
 ## How to Build & Run
 
 ### Java
-> Instructions will be added during Day 2 implementation.
+See [java/README.md](/Users/sikunpeng/sikun/MSCS632-Group-Project/java/README.md).
+
+From the `java/` directory:
+
+```bash
+mvn clean package
+mvn exec:java
+```
 
 ### JavaScript
 > Instructions will be added during Day 2 implementation.
