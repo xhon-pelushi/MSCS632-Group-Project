@@ -1,6 +1,9 @@
+const banner = require('./banner');
 const { start } = require('./menu');
 
-start().catch(err => {
-  console.error('Fatal error:', err.message);
-  process.exit(1);
-});
+banner.show()
+  .then(() => start())
+  .catch(err => {
+    console.error('Fatal error:', err.message);
+    process.exit(1);
+  });

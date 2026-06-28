@@ -32,10 +32,36 @@ function ask(question) {
 
 const IS_TTY = process.stdout.isTTY;
 
+// Keep the startup banner visible: skip the clear on the very first screen so
+// the splash stays on screen with the first menu drawn underneath it.
+let _skipFirstClear = true;
+
+const C = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  yellow: '\x1b[38;5;226m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[38;5;245m',
+  green: '\x1b[32m',
+};
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+// Draws a colored bar running left-to-right across the screen, then clears it.
+async function sweep(color = C.yellow) {
+  const width = 44;
+  for (let i = 1; i <= width; i++) {
+    process.stdout.write('\r' + color + '━'.repeat(i) + C.reset);
+    await sleep(8);
+  }
+  process.stdout.write('\r' + ' '.repeat(width) + '\r');
+}
+
 function hr() { console.log('─'.repeat(52)); }
 
 function header(title) {
-  if (IS_TTY) console.clear();
+  if (IS_TTY && !_skipFirstClear) console.clear();
+  _skipFirstClear = false;
   hr();
   console.log(`  ${title}`);
   hr();
@@ -61,19 +87,23 @@ async function pause() {
 async function userSelectionScreen() {
   while (true) {
     header('Collaborative To-Do List');
-    console.log('\n  Select a user:\n');
+    console.log('\n  ' + C.bold + C.yellow + 'Select a user' + C.reset + '\n');
 
     const users = userManager.getUsers();
-    users.forEach((u, i) => console.log(`    ${i + 1}. ${u.name}`));
-    console.log(`    ${users.length + 1}. Add new user`);
-    console.log('    0. Exit\n');
+    for (let i = 0; i < users.length; i++) {
+      console.log('   ' + C.cyan + C.bold + `[${i + 1}]` + C.reset + ' ' + users[i].name);
+      await sleep(30);
+    }
+    console.log('   ' + C.cyan + C.bold + `[${users.length + 1}]` + C.reset + ' Add new user');
+    console.log('   ' + C.cyan + C.bold + '[0]' + C.reset + ' Exit\n');
 
-    const choice = (await ask('  > ')).trim();
+    const choice = (await ask('  ➤ ')).trim();
 
     if (choice === '0') { shutdown(); }
 
     const idx = parseInt(choice) - 1;
     if (idx >= 0 && idx < users.length) {
+      await sweep();
       userManager.setActiveUser(users[idx].id);
       return;
     }
@@ -81,6 +111,7 @@ async function userSelectionScreen() {
     if (parseInt(choice) === users.length + 1) {
       const name = (await ask('  Name: ')).trim();
       if (name) {
+        await sweep();
         const user = userManager.createUser(name);
         userManager.setActiveUser(user.id);
         return;
@@ -291,20 +322,37 @@ function shutdown() {
 async function mainMenu() {
   while (true) {
     const active = userManager.getActiveUser();
-  if (IS_TTY) console.clear();
-    header(`Logged in as: ${active.name}`);
-    console.log('\n  1. View all tasks');
-    console.log('  2. View my tasks');
-    console.log('  3. Add task');
-    console.log('  4. Edit task');
-    console.log('  5. Mark task complete');
-    console.log('  6. Delete task');
-    console.log('  7. Filter tasks');
-    console.log('  8. Concurrency demo');
-    console.log('  9. Switch user');
-    console.log('  0. Exit\n');
+    if (IS_TTY) console.clear();
 
-    const choice = (await ask('  > ')).trim();
+    const rule = C.yellow + '━'.repeat(44) + C.reset;
+    console.log('\n' + rule);
+    console.log('  ' + C.yellow + C.bold + 'JS' + C.reset + C.gray + '  ·  ' + C.reset
+      + C.bold + 'Logged in as: ' + C.reset + active.name);
+    console.log(rule);
+
+    const options = [
+      '[1] View all tasks',
+      '[2] View my tasks',
+      '[3] Add task',
+      '[4] Edit task',
+      '[5] Mark task complete',
+      '[6] Delete task',
+      '[7] Filter tasks',
+      '[8] Concurrency demo',
+      '[9] Switch user',
+      '[0] Exit',
+    ];
+    for (const opt of options) {
+      console.log('   ' + C.cyan + C.bold + opt.slice(0, 3) + C.reset + opt.slice(3));
+      await sleep(30);
+    }
+    console.log(rule);
+
+    const choice = (await ask('  ➤ ')).trim();
+
+    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(choice)) {
+      await sweep();
+    }
 
     switch (choice) {
       case '1': await viewTasksScreen(taskManager.getAllTasks()); break;

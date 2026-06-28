@@ -15,6 +15,12 @@ public final class UserManager {
 
     private final ConcurrentHashMap<UUID, User> users = new ConcurrentHashMap<>();
 
+    public UserManager() {
+        // Pre-seed team members
+        createUser("Xhon Pelushi");
+        createUser("Sikun Peng");
+    }
+
     public User createUser(String name) {
         User user = new User(IdGenerator.newId(), name, LocalDateTime.now());
         users.put(user.getId(), user);

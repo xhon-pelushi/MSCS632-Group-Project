@@ -37,8 +37,11 @@ public final class Menu {
         boolean running = true;
         while (running) {
             try {
-                ensureActiveUser();
-                running = showMainMenu();
+                if (activeUser == null && !selectUser()) {
+                    running = false;
+                } else {
+                    running = showMainMenu();
+                }
             } catch (IllegalArgumentException | NoSuchElementException exception) {
                 System.out.println("Error: " + exception.getMessage());
             }
@@ -47,38 +50,47 @@ public final class Menu {
         System.out.println("Application closed.");
     }
 
-    private void ensureActiveUser() {
+    private boolean selectUser() {
         while (activeUser == null) {
+            List<User> users = userManager.getAllUsers();
+            String rule = Ansi.ORANGE + "━".repeat(44) + Ansi.RESET;
             System.out.println();
-            System.out.println("Select User");
-            System.out.println("1. Existing User");
-            System.out.println("2. Create User");
+            System.out.println(rule);
+            System.out.println("  " + Ansi.ORANGE + Ansi.BOLD + "☕ JAVA" + Ansi.RESET
+                    + Ansi.GRAY + "  ·  " + Ansi.RESET + Ansi.BOLD + "Select a user" + Ansi.RESET);
+            System.out.println(rule);
+            for (int index = 0; index < users.size(); index++) {
+                System.out.println("   " + Ansi.CYAN + Ansi.BOLD + "[" + (index + 1) + "]" + Ansi.RESET
+                        + " " + users.get(index).getName());
+                Ansi.sleep(30);
+            }
+            System.out.println("   " + Ansi.CYAN + Ansi.BOLD + "[" + (users.size() + 1) + "]" + Ansi.RESET
+                    + " Add new user");
+            System.out.println("   " + Ansi.CYAN + Ansi.BOLD + "[0]" + Ansi.RESET + " Exit");
+            System.out.println(rule);
 
-            int choice = readMenuChoice(1, 2);
-            if (choice == 1) {
-                loginExistingUser();
-            } else {
+            int choice = readMenuChoice(0, users.size() + 1);
+            if (choice == 0) {
+                return false;
+            }
+            Ansi.sweep(Ansi.ORANGE);
+            if (choice == users.size() + 1) {
                 createAndLoginUser();
+            } else {
+                activeUser = users.get(choice - 1);
+                System.out.println("Logged in as " + activeUser.getName() + ".");
             }
         }
+        return true;
     }
 
     private boolean showMainMenu() {
-        System.out.println();
-        System.out.println("Active User: " + activeUser.getName() + " [" + shortId(activeUser.getId()) + "]");
-        System.out.println("1. View All Tasks");
-        System.out.println("2. View My Tasks");
-        System.out.println("3. Add Task");
-        System.out.println("4. Edit Task");
-        System.out.println("5. Mark Task Complete");
-        System.out.println("6. Delete Task");
-        System.out.println("7. Filter By Category");
-        System.out.println("8. Filter By Status");
-        System.out.println("9. Switch User");
-        System.out.println("10. Run Concurrency Demo");
-        System.out.println("0. Exit");
-
-        int choice = readMenuChoice(0, 10);
+        printMainMenu();
+        int choice = readMenuChoice(0, 9);
+        if (choice == 0) {
+            return false;
+        }
+        Ansi.sweep(Ansi.ORANGE);
         switch (choice) {
             case 1 -> viewAllTasks();
             case 2 -> viewMyTasks();
@@ -86,29 +98,40 @@ public final class Menu {
             case 4 -> editTask();
             case 5 -> markTaskComplete();
             case 6 -> deleteTask();
-            case 7 -> filterByCategory();
-            case 8 -> filterByStatus();
+            case 7 -> filterTasks();
+            case 8 -> runConcurrencyDemo();
             case 9 -> switchUser();
-            case 10 -> runConcurrencyDemo();
-            case 0 -> {
-                return false;
-            }
             default -> throw new IllegalArgumentException("Invalid menu choice.");
         }
         return true;
     }
 
-    private void loginExistingUser() {
-        if (!userManager.hasUsers()) {
-            System.out.println("No users found. Please create a user first.");
-            createAndLoginUser();
-            return;
+    private void printMainMenu() {
+        String[] options = {
+                "[1] View all tasks",
+                "[2] View my tasks",
+                "[3] Add task",
+                "[4] Edit task",
+                "[5] Mark task complete",
+                "[6] Delete task",
+                "[7] Filter tasks",
+                "[8] Concurrency demo",
+                "[9] Switch user",
+                "[0] Exit",
+        };
+        String rule = Ansi.ORANGE + "━".repeat(44) + Ansi.RESET;
+        System.out.println();
+        System.out.println(rule);
+        System.out.println("  " + Ansi.ORANGE + Ansi.BOLD + "☕ JAVA" + Ansi.RESET
+                + Ansi.GRAY + "  ·  " + Ansi.RESET
+                + Ansi.BOLD + "Active User: " + Ansi.RESET + activeUser.getName());
+        System.out.println(rule);
+        for (String option : options) {
+            System.out.println("   " + Ansi.CYAN + Ansi.BOLD + option.substring(0, 3) + Ansi.RESET
+                    + option.substring(3));
+            Ansi.sleep(30);
         }
-
-        displayUsers();
-        UUID userId = readUuid("Enter user UUID: ");
-        activeUser = userManager.getUserById(userId);
-        System.out.println("Logged in as " + activeUser.getName() + ".");
+        System.out.println(rule);
     }
 
     private void createAndLoginUser() {
@@ -119,7 +142,6 @@ public final class Menu {
 
     private void switchUser() {
         activeUser = null;
-        ensureActiveUser();
     }
 
     private void viewAllTasks() {
@@ -164,6 +186,22 @@ public final class Menu {
         Task task = selectTask("Enter task UUID to delete: ");
         taskManager.deleteTask(task.getId());
         System.out.println("Task deleted.");
+    }
+
+    private void filterTasks() {
+        System.out.println();
+        System.out.println("Filter by:");
+        System.out.println("1. Category");
+        System.out.println("2. Status");
+        System.out.println("0. Back");
+
+        int choice = readMenuChoice(0, 2);
+        switch (choice) {
+            case 1 -> filterByCategory();
+            case 2 -> filterByStatus();
+            case 0 -> { }
+            default -> throw new IllegalArgumentException("Invalid menu choice.");
+        }
     }
 
     private void filterByCategory() {
